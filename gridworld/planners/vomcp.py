@@ -17,7 +17,7 @@ class VOMCP(BasePlanner):
         self.action_space = env.action_space[:-1]
         self.n_actions = len(self.action_space)
 
-        self.root = ONode(history=[], n_actions=self.n_actions)
+        self.root = ONode(history=[], n_actions=self.n_actions, q_thresh=self.q_thresh)
         self.root.belief = self.uniform_prior()
 
     def run_episode(self):
@@ -87,7 +87,7 @@ class VOMCP(BasePlanner):
             main_rollouts = int( (1-self.split) * self.n_rollouts)
 
         # Create root node for each virtual search
-        self.virtual_trees = {k: ONode(history=self.root.history+[f'a{self.obs_action}']+[f'o{k}'], n_actions=self.n_actions) for k in self.vobs_dict}
+        self.virtual_trees = {k: ONode(history=self.root.history+[f'a{self.obs_action}']+[f'o{k}'], n_actions=self.n_actions, q_thresh=self.q_thresh) for k in self.vobs_dict}
 
         # Generate belief for each virtual observation
         for k in self.virtual_trees:
@@ -96,10 +96,6 @@ class VOMCP(BasePlanner):
             # if belief update fails, fall back to uniform prior
             if np.sum(updated_belief) == 0:
                 updated_belief = self.uniform_prior()
-
-            # # otherwise do a reinvigoration step
-            # elif self.reinvigorate:
-            #     updated_belief = self.particle_reinvigoration(updated_belief, virtual_samples)
 
             self.virtual_trees[k].belief = updated_belief
 
@@ -206,23 +202,18 @@ class VOMCP(BasePlanner):
         # Create new root if history not encountered during search
         if matching_node is False:
             new_history = self.root.history + [f'a{action}'] + [f'o{obs}']
-            self.root = ONode(history=new_history, n_actions=self.n_actions)
+            self.root = ONode(history=new_history, n_actions=self.n_actions, q_thresh=self.q_thresh)
+            self.root.belief = np.zeros(self.n_states, dtype=int_type)
 
         # Update the old belief and add this to the pre-existing particles in the new belief.
         # Note: particle budget per tree should be given by self.n_samples // n_trees. But we do not know n_trees
         # in advance, as this requires sampling obs from the root belief distribution. So we use n_vobs in place of n_trees here.
         n_samples = self.n_samples // (self.n_vobs + 1)
-        if self.root.belief is None or self.retain_particles is False:
-            self.root.belief = np.zeros(self.n_states, dtype=int_type)
         self.root.belief += self.belief_update(old_belief, action, obs, n_samples)
 
         # if particle filter empty, agent is effectively lost. default to uniform prior.
         if np.sum(self.root.belief) == 0:
             self.root.belief = self.uniform_prior()
-
-        # # perform a reinvigoration step if requested
-        # if self.reinvigorate:
-        #     self.root.belief = self.particle_reinvigoration(self.root.belief, self.n_samples)
 
     def run_history(self, history):
         tree_depths = []
@@ -240,7 +231,7 @@ class VOMCP(BasePlanner):
                 next_action = next_history[-2]
                 next_obs = next_history[-1]
                 updated_belief = self.belief_update(self.root.belief, next_action, next_obs, n_samples)
-                self.root = ONode(history=next_history, n_actions=self.n_actions + 1)
+                self.root = ONode(history=next_history, n_actions=self.n_actions + 1, q_thresh=self.q_thresh)
                 self.root.belief = updated_belief
 
             self.planning()

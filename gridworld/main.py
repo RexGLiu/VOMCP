@@ -33,8 +33,7 @@ parser.add_argument("--pval", required=False, default=0.01, type=float, help="p-
 parser.add_argument("--max_depth", required=False, default=200, type=int, help="Tree search max depth")
 parser.add_argument("--max_steps", required=False, default=150, type=int, help="Cap on steps in an episode")
 parser.add_argument('--split', required=False, default=None, type=float, help="Fraction of total budget to allocate to virtual search in VOMCP. Allocation will be split equally amongst the virtual trees. Default is to equally partition amongst all main and virtual trees.")
-parser.add_argument('--retain_particles', required=False, action='store_true', help="Whether to retain particles filtered from previous planning steps during root node update.")
-# parser.add_argument("--reinvigorate", action='store_true', help="Whether to reinvigorate particles after each filtering step. Default is False.")
+parser.add_argument("--q_thresh", required=False, default=1E-15, type=float, help="When randomly choosing from amongst best actions, all actions with Q-values within q_thresh of maximum Q-value will be included.")
 args, _ = parser.parse_known_args()
 
 if args.n_rollouts == 0:
@@ -58,9 +57,8 @@ run_params = {"nruns": args.nruns,
     "pval": args.pval,
     "max_depth": args.max_depth,
     "max_steps": args.max_steps,
-    # "reinvigorate": args.reinvigorate,
     "split": args.split,
-    "retain_particles": args.retain_particles
+    "q_thresh": args.q_thresh,
 }
 
 '''Set correct planning algorithm'''

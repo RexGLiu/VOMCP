@@ -148,17 +148,12 @@ class EA(BasePlanner):
             self.root = anode.children[obs]
         else:
             new_history = self.root.history + [f'a{action}'] + [f'o{obs}']
-            self.root = ONode(history=new_history, n_actions=self.n_actions)
+            self.root = ONode(history=new_history, n_actions=self.n_actions, q_thresh=self.q_thresh)
+            self.root.belief = np.zeros(self.n_states, dtype=int_type)
 
         # update the old belief and add this to the pre-existing particles in the new belief
-        if self.root.belief is None or self.retain_particles is False:
-            self.root.belief = np.zeros(self.n_states, dtype=int_type)
         self.root.belief += self.belief_update(old_belief, action, obs, self.n_samples)
 
         # if particle filter empty, agent is effectively lost. default to uniform prior.
         if np.sum(self.root.belief) == 0:
             self.root.belief = self.uniform_prior()
-
-        # # perform a reinvigoration step if requested
-        # if self.reinvigorate:
-        #     self.root.belief = self.particle_reinvigoration(self.root.belief, self.n_samples)

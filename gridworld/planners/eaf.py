@@ -10,13 +10,13 @@ class EAF(EA):
         self.real_action_space = self.action_space[:-1]
         self.n_actions = len(self.real_action_space)
 
-        self.root = ONode(history=[], n_actions=self.n_actions+1)
+        self.root = ONode(history=[], n_actions=self.n_actions+1, q_thresh=self.q_thresh)
         self.root.belief = self.uniform_prior()
 
         self.pval = params['pval']
 
     def reset(self):
-        self.root = ONode(history=[], n_actions=self.n_actions+1)
+        self.root = ONode(history=[], n_actions=self.n_actions+1, q_thresh=self.q_thresh)
         self.root.belief = self.uniform_prior()
         self.env.reset()
 
@@ -61,10 +61,9 @@ class EAF(EA):
             # extend tree
             anode = curr_node.children[action]
             next_history = curr_node.history+[f'a{action}']+[f'o{next_step.observation}']
-            next_onode = ONode(history=next_history, n_actions=self.n_actions)
-            if self.retain_particles:
-                next_onode.belief = np.zeros(self.n_states, dtype=int_type)
-                next_onode.belief[next_state] = 1
+            next_onode = ONode(history=next_history, n_actions=self.n_actions, q_thresh=self.q_thresh)
+            next_onode.belief = np.zeros(self.n_states, dtype=int_type)
+            next_onode.belief[next_state] = 1
             anode.children[next_step.observation] = next_onode
             anode.N += 1
 
@@ -99,14 +98,12 @@ class EAF(EA):
         # If necessary, create new ONode for next history.
         if next_onode is None:
             next_history = curr_node.history + [f'a{action}'] + [f'o{next_step.observation}']
-            next_onode = ONode(history=next_history, n_actions=self.n_actions)
-            if self.retain_particles:
-                next_onode.belief = np.zeros(self.n_states, dtype=int_type)
+            next_onode = ONode(history=next_history, n_actions=self.n_actions, q_thresh=self.q_thresh)
+            next_onode.belief = np.zeros(self.n_states, dtype=int_type)
             anode.children[next_step.observation] = next_onode
 
         # Update belief for next_onode
-        if self.retain_particles:
-            next_onode.belief[next_state] += 1
+        next_onode.belief[next_state] += 1
 
         # Continue tree traversal
         r, max_depth, rollout_depth = self.traverse_tree(next_onode, next_state, depth+2)
@@ -155,7 +152,7 @@ class EAF(EA):
                 next_action = next_history[-2]
                 next_obs = next_history[-1]
                 updated_belief = self.belief_update(self.root.belief, next_action, next_obs, self.n_samples)
-                self.root = ONode(history=next_history, n_actions=self.n_actions+1)
+                self.root = ONode(history=next_history, n_actions=self.n_actions+1, q_thresh=self.q_thresh)
                 self.root.belief = updated_belief
 
             self.planning()

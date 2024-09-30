@@ -2,7 +2,6 @@ import numpy as np
 from .node import ONode, ANode, Ninit
 
 int_type = np.uint64
-err = 1E-15
 
 class BeliefException(Exception):
     def __init__(self, belief):
@@ -21,8 +20,7 @@ class BasePlanner():
         self.start_depth = 1
         self.max_depth = params['max_depth']
         self.max_steps = params['max_steps']
-        self.retain_particles = params['retain_particles']
-        # self.reinvigorate = params['reinvigorate']
+        self.q_thresh = params['q_thresh']
 
         # set space of actions that tree will consider
         self.action_space = env.action_space
@@ -31,11 +29,11 @@ class BasePlanner():
 
         self.n_states = len(self.env.observation_space)
 
-        self.root = ONode(history=[], n_actions=self.n_actions)
+        self.root = ONode(history=[], n_actions=self.n_actions, q_thresh=self.q_thresh)
         self.root.belief = self.uniform_prior()
 
     def reset(self):
-        self.root = ONode(history=[], n_actions=self.n_actions)
+        self.root = ONode(history=[], n_actions=self.n_actions, q_thresh=self.q_thresh)
         self.root.belief = self.uniform_prior()
         self.env.reset()
 
@@ -91,10 +89,9 @@ class BasePlanner():
             # extend tree
             anode = curr_node.children[action]
             next_history = curr_node.history+[f'a{action}']+[f'o{next_step.observation}']
-            next_onode = ONode(history=next_history, n_actions=self.n_actions)
-            if self.retain_particles:
-                next_onode.belief = np.zeros(self.n_states, dtype=int_type)
-                next_onode.belief[next_state] = 1
+            next_onode = ONode(history=next_history, n_actions=self.n_actions, q_thresh=self.q_thresh)
+            next_onode.belief = np.zeros(self.n_states, dtype=int_type)
+            next_onode.belief[next_state] = 1
             anode.children[next_step.observation] = next_onode
             anode.N += 1
 
@@ -126,14 +123,12 @@ class BasePlanner():
         # If necessary, create new ONode for next history.
         if next_onode is None:
             next_history = curr_node.history + [f'a{action}'] + [f'o{next_step.observation}']
-            next_onode = ONode(history=next_history, n_actions=self.n_actions)
-            if self.retain_particles:
-                next_onode.belief = np.zeros(self.n_states, dtype=int_type)
+            next_onode = ONode(history=next_history, n_actions=self.n_actions, q_thresh=self.q_thresh)
+            next_onode.belief = np.zeros(self.n_states, dtype=int_type)
             anode.children[next_step.observation] = next_onode
 
         # Update belief for next_onode
-        if self.retain_particles:
-            next_onode.belief[next_state] += 1
+        next_onode.belief[next_state] += 1
 
         # Continue tree traversal
         r, max_depth, rollout_depth = self.traverse_tree(next_onode, next_state, depth+2)
@@ -206,13 +201,6 @@ class BasePlanner():
 
         return belief
 
-    # def particle_reinvigoration(self, belief, n_samples):
-    #     new_belief = np.zeros(self.n_states, dtype=int_type)
-    #     sampled_states = np.random.choice(belief, n_samples)
-    #     for s in sampled_states:
-    #         new_belief[s] += 1
-    #     return new_belief
-
     def sample_particles(self, belief, nsamples=None):
         '''
         :param belief: set of particles representing belief distribution
@@ -239,7 +227,7 @@ class BasePlanner():
         UCT_values = [self.UCT(onode, a) for a in action_space]
         greedy_action = max(action_space,key=lambda a:UCT_values[a])
         max_UCT = UCT_values[greedy_action]
-        action_list = [a for a in action_space if UCT_values[a] >= max_UCT - err]  # randomly break statistical ties
+        action_list = [a for a in action_space if UCT_values[a] >= max_UCT - self.q_thresh]  # randomly break statistical ties
         return np.random.choice(action_list)
 
     def run_history(self, history):
@@ -254,7 +242,7 @@ class BasePlanner():
                 next_action = next_history[-2]
                 next_obs = next_history[-1]
                 updated_belief = self.belief_update(self.root.belief, next_action, next_obs, self.n_samples)
-                self.root = ONode(history=next_history, n_actions=self.n_actions)
+                self.root = ONode(history=next_history, n_actions=self.n_actions, q_thresh=self.q_thresh)
                 self.root.belief = updated_belief
 
             self.planning()
