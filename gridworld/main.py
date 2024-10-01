@@ -25,9 +25,9 @@ parser.add_argument("--p_fail", required=False, default=0.3, type=float, help="P
 parser.add_argument("--obs_width", required=False, default=1, type=int, help="Observations to be drawn with (x+/-obs_width, y+/-obs_width) of agent's location (x,y)")
 parser.add_argument("--survival_rew", required=False, action='store_true', help="Switches from hole penalties (default) to survival rewards to encourage avoiding holes")
 parser.add_argument("--n_vobs", required=False, default=4, type=int, help="Number of virtual observations to sample. Only relevant for VOMCP.")
-parser.add_argument("--n_samples", required=False, default=20000, type=int, help="By default, this sets the total rejection sampling budget (divided across trees in VOMCP) at each belief update. But if fixed_filter is set, this sets a fixed total particle budget instead.")
+parser.add_argument("--n_samples", required=False, default=0, type=int, help="By default, this sets the total rejection sampling budget (divided across trees in VOMCP) at each belief update. But if fixed_filter is set, this sets a fixed total particle budget instead. Value defaults to match n_rollouts if not set.")
 parser.add_argument("--fixed_filter", action='store_true', help="If set, particle filters sizes rather than number of rejection sample steps gets fixed in belief updates. See also n_samples.")
-parser.add_argument("--n_rollouts", required=False, default=0, type=int, help="Total rollout budget at each planning step. Defaults to n_samples.")
+parser.add_argument("--n_rollouts", required=False, default=20000, type=int, help="Total rollout budget at each planning step.")
 parser.add_argument("--c", required=False, default=1000, type=float, help="Tree search exploration hyperparameter")
 parser.add_argument("--pval", required=False, default=0.01, type=float, help="p-value threshold for t-testing")
 parser.add_argument("--max_depth", required=False, default=200, type=int, help="Tree search max depth")
@@ -36,8 +36,8 @@ parser.add_argument('--split', required=False, default=None, type=float, help="F
 parser.add_argument("--q_thresh", required=False, default=1E-15, type=float, help="When randomly choosing from amongst best actions, all actions with Q-values within q_thresh of maximum Q-value will be included.")
 args, _ = parser.parse_known_args()
 
-if args.n_rollouts == 0:
-    args.n_rollouts = args.n_samples
+if args.n_samples == 0:
+    args.n_samples = args.n_rollouts
 
 '''Save run parameters for each seed to a run_parameter subfolder'''
 run_params = {"nruns": args.nruns,
