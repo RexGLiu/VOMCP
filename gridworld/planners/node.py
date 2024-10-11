@@ -1,7 +1,7 @@
 import numpy as np
 
 int_type = np.uint64
-Ninit, Vinit, V_sqr_init = 0, 0, 0  # Ninit = -1 used to indicate node in need of rollout
+Ninit, Vinit, V_sqr_init = 0, 0, 0
 
 class Node():
     def __init__(self, history):

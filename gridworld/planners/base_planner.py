@@ -99,6 +99,13 @@ class BasePlanner():
             r, rollout_depth = self.random_rollout(next_state, depth+2)
                 # depth increases by two bc we increment by one action and one obs node
 
+            # Compute returns
+            R = next_step.reward + self.gamma * r
+
+            # Update node's values
+            anode.V += (R - anode.V) / anode.N
+            anode.V_sqr += (R*R - anode.V_sqr) / anode.N
+
             # track tree depth of 3 from current node
             curr_node.tree_depths += [3]
             anode.tree_depths += [2]
@@ -108,7 +115,7 @@ class BasePlanner():
             curr_node.rollout_depths += [rollout_depth - starting_rollout_depth]
                 # note: this accounting differs slightly from counting number of tree layers
 
-            return next_step.reward + self.gamma * r, depth+2, rollout_depth
+            return R, depth+2, rollout_depth
 
         # Select action using UCT tree policy
         action = self.UCT_policy(curr_node, self.action_space)
