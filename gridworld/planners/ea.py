@@ -96,9 +96,9 @@ class EA(BasePlanner):
         N_obs = self.root.children[self.obs_action].N
 
         # cannot compute t-statistic if "observe" action sampled only once. default to not observing in that case.
-        if N_obs < 2:
+        if N_obs <= 1:
             return action
-        elif N < 2:  # if real actions sampled only once, t-test also not valid so default to taking an observation
+        elif N <= 1:  # if real actions sampled only once, t-test also not valid so default to taking an observation
             return self.obs_action
 
         # do t-test to compare the two values

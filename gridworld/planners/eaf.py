@@ -183,7 +183,7 @@ class EAF_modified(EAF):
         N_main = q_info['N']
 
         # with just one datapoint, estimate of real action value unreliable, so default to conservative option of getting more data
-        if N_main < 2:
+        if N_main <= 1:
             return self.obs_action
 
         std_err1 = (Q_sqr_main - Q_main**2) / (N_main-1)
