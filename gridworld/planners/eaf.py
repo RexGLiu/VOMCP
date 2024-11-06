@@ -184,7 +184,9 @@ class EAF_modified(EAF):
 
         # with just one datapoint, estimate of real action value unreliable, so default to conservative option of getting more data
         if N_main <= 1:
-            return self.obs_action
+            print("Real action value unreliable, defaulting to observe")
+            decision_flag = 1
+            return self.obs_action, decision_flag
 
         std_err1 = (Q_sqr_main - Q_main**2) / (N_main-1)
         dof_denom1 = std_err1**2 / (N_main-1)
@@ -217,7 +219,9 @@ class EAF_modified(EAF):
 
         # if "observe" branch under-sampled, default to real action.
         if N_obs == 0:
-            return action
+            print("Observe value unreliable, defaulting to real action")
+            decision_flag = 2
+            return action, decision_flag
         else: # otherwise, normalise stats for "observe" action
             Q_obs /= N_obs
             std_err2 /= N_obs**2
@@ -225,17 +229,86 @@ class EAF_modified(EAF):
 
         # if both std_err are 0, default to picking largest value
         if std_err1 == std_err2 == 0:
+            decision_flag = 3
             if Q_main > Q_obs:
-                return action
+                return action, decision_flag
             else:
-                return self.obs_action
+                return self.obs_action, decision_flag
 
         # compute t-statistic to compare the two values
         t_stat = (Q_obs - Q_main) / np.sqrt(std_err1 + std_err2)
         dof = (std_err1 + std_err2)**2 / (dof_denom1 + dof_denom2)
 
         # if 'observe' has significantly better Q-value, return 'observe' as next action
+        decision_flag = 0
         if t_distr.cdf(t_stat, dof) > 1 - self.pval:
-            return self.obs_action
+            return self.obs_action, decision_flag
         else:
-            return action
+            return action, decision_flag
+
+    def run_episode(self):
+        '''Copy of run_episode in EA but with decision_flag tracking added in.'''
+        log = {}
+        curr_step = self.env.reset()
+
+        tot_reward = 0.0
+        R = 0.0
+        discount = 1
+        obs_count = 0
+
+        states_visited = [self.env.state]
+        N_observe = []
+        N_branch_obs = []
+        obs_branch_visits = []
+        decision_flags = [0,0,0,0]
+
+        n_steps = 0
+        while (curr_step.done is False and n_steps < self.max_steps):
+            action, flag = self.planning()
+            curr_step = self.env.step(action)
+            decision_flags[flag] += 1
+
+            # Update metrics being tracked
+            tot_reward += curr_step.reward
+            R += discount*curr_step.reward
+            discount *= self.gamma
+
+            obs_count += (action == self.obs_action)  # count number of times an extra observation was taken
+            states_visited += [self.env.state]
+
+            # update tree structure metrics
+            observe_node = self.root.children[self.obs_action]
+            N_observe += [observe_node.N]  # number of times 'observe' was sampled at root
+
+            observe_branches = [onode for onode in observe_node.children if
+                                onode is not None]  # list of nodes representing histories that follow 'observe'
+            N_branch_obs += [len(observe_branches)]
+            obs_branch_visits += [branch.N for branch in observe_branches]
+
+            # Update root node according to action taken and observation received
+            self.update_root(action, curr_step.observation)
+
+            print(f"Step {n_steps}: agent took action {action} in state {self.env.state} and received reward {curr_step.reward} "
+                  f"and observation {curr_step.observation} for a running total reward of {tot_reward}, discounted return of {R}, "
+                  f"and {obs_count} extra observations.")
+
+            assert len(self.root.history) == 2*(len(states_visited)-1), f"Mismatched lengths between history and states visited: {self.root.history} and {states_visited}"
+
+            n_steps += 1
+
+        log['total steps'] = n_steps
+        log['success'] = self.env.goal_reached()
+        log['done'] = curr_step.done
+        log['total reward'] = tot_reward
+        log['discounted return'] = R
+        log['observation count'] = obs_count
+        log['final history'] = self.root.history
+        log['states visited'] = states_visited
+
+        # search tree structure statistics
+        log["N 'observe' at root"] = N_observe   # number of times 'observe' was sampled at root
+        log["N branches at 'observe'"] = N_branch_obs
+        log["'observe' branch visits"] = obs_branch_visits
+        log["decision flag counts"] = decision_flags
+
+        return log

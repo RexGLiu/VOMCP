@@ -136,6 +136,9 @@ N_obs_root = [None]*nruns
 N_obs_branches = [None]*nruns
 obs_branch_visits = [None]*nruns
 
+if args.mode == "EAF_modified":
+    decision_flag_counts = [None]*nruns
+
 '''Loop through episodes and store results'''
 for i in range(nruns):
     try:
@@ -180,12 +183,15 @@ for i in range(nruns):
     visit_count[states_visited[-1]] += 1
 
     # tree statistics
-    if args.mode in ["EA", "EAF"]:
+    if args.mode in ["EA", "EAF", "EAF_modified"]:
         N_obs_root[i] = run_results["N 'observe' at root"]
         N_obs_branches[i] = run_results["N branches at 'observe'"]
         obs_branch_visits[i] = run_results["'observe' branch visits"]
 
-    # save result of each trial to temporary file
+    if args.mode == "EAF_modified":
+        decision_flag_counts[i] = run_results["decision flag counts"]
+
+        # save result of each trial to temporary file
     with open(save_path + "_0.npy", "wb") as f:
         np.save(f, obs_count)
         np.save(f, visit_count)
@@ -200,10 +206,13 @@ for i in range(nruns):
         pickle.dump(history_list, f)
         pickle.dump(states_traversed_list, f)
 
-        if args.mode in ["EA", "EAF"]:
+        if args.mode in ["EA", "EAF", "EAF_modified"]:
             pickle.dump(N_obs_root, f)
             pickle.dump(N_obs_branches, f)
             pickle.dump(obs_branch_visits, f)
+
+        if args.mode == "EAF_modified":
+            pickle.dump(decision_flag_counts, f)
 
     sys.stdout.flush()
 
@@ -211,24 +220,26 @@ for i in range(nruns):
 
 # save complete results to file
 with open(save_path + ".npy", "wb") as f:
-        np.save(f, obs_count)
-        np.save(f, visit_count)
-        np.save(f, success_array)
-        np.save(f, pathlen_array)
-        np.save(f, tot_rew_array)
-        np.save(f, R_array)
-        np.save(f, obs_count_array)
+    np.save(f, obs_count)
+    np.save(f, visit_count)
+    np.save(f, success_array)
+    np.save(f, pathlen_array)
+    np.save(f, tot_rew_array)
+    np.save(f, R_array)
+    np.save(f, obs_count_array)
 
 with open(save_path + ".pkl", "wb") as f:
-        pickle.dump(nruns, f)
-        pickle.dump(history_list, f)
-        pickle.dump(states_traversed_list, f)
+    pickle.dump(nruns, f)
+    pickle.dump(history_list, f)
+    pickle.dump(states_traversed_list, f)
 
-        if args.mode in ["EA", "EAF"]:
-            pickle.dump(N_obs_root, f)
-            pickle.dump(N_obs_branches, f)
-            pickle.dump(obs_branch_visits, f)
+    if args.mode in ["EA", "EAF", "EAF_modified"]:
+        pickle.dump(N_obs_root, f)
+        pickle.dump(N_obs_branches, f)
+        pickle.dump(obs_branch_visits, f)
 
+    if args.mode == "EAF_modified":
+        pickle.dump(decision_flag_counts, f)
 
 os.remove(save_path + "_0.npy")
 os.remove(save_path + "_0.pkl")
