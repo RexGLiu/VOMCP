@@ -29,7 +29,7 @@ parser.add_argument("--n_samples", required=False, default=0, type=int, help="By
 parser.add_argument("--fixed_filter", action='store_true', help="If set, particle filters sizes rather than number of rejection sample steps gets fixed in belief updates. See also n_samples.")
 parser.add_argument("--n_rollouts", required=False, default=20000, type=int, help="Total rollout budget at each planning step.")
 parser.add_argument("--c", required=False, default=1000, type=float, help="Tree search exploration hyperparameter")
-parser.add_argument("--pval", required=False, default=0.01, type=float, help="p-value threshold for t-testing")
+parser.add_argument("--pval", required=False, default=0.20, type=float, help="p-value threshold for t-testing")
 parser.add_argument("--max_depth", required=False, default=200, type=int, help="Tree search max depth")
 parser.add_argument("--max_steps", required=False, default=150, type=int, help="Cap on steps in an episode")
 parser.add_argument('--split', required=False, default=None, type=float, help="Fraction of total budget to allocate to virtual search in VOMCP. Allocation will be split equally amongst the virtual trees. Default is to equally partition amongst all main and virtual trees.")
