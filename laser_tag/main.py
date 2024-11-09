@@ -13,11 +13,12 @@ parser.add_argument("--method", required=False, default='vomcp', type=str)
 parser.add_argument("--seed", required=False, default=-1, type=int)
 parser.add_argument("--render", required=False, action='store_true')
 parser.add_argument("--n_lasers", required=False, default=8, type=int)
-parser.add_argument("--n_samples", required=False, default=1000, type=int,
+parser.add_argument("--n_samples", required=False, default=10000, type=int,
                     help='If fixed_filter is false, this sets number of iterations during rejection sampling of belief update step. Otherwise, this sets filter size.')
 parser.add_argument("--n_rollouts", required=False, default=0, type=int)
 parser.add_argument("--fixed_filter", required=False, action='store_true', help='If true, n_samples specifies a fixed filter size.')
 parser.add_argument("--n_vo", required=False, default=1, type=int, help="number of virtual observations to sample. only relevant for vomcp.")
+parser.add_argument("--pval", required=False, default=0.20, type=float, help="p-value threshold for t-testing")
 args, _ = parser.parse_known_args()
 
 
@@ -33,7 +34,7 @@ if args.n_rollouts == 0:
 
 # 2. Setting the environment
 method = args.method                             # choose your method
-kwargs = {'n_vo': args.n_vo, 'particle_revigoration': False, 'fixed_filter': args.fixed_filter}       # define your additional hyperparameters to it (optional)
+kwargs = {'n_vo': args.n_vo, 'particle_revigoration': False, 'fixed_filter': args.fixed_filter, 'pval': args.pval}       # define your additional hyperparameters to it (optional)
 env_name = "LaserTagEnv"
 scenario_id = args.scenario_id                   # define your scenario configuration (check the available configuration in our GitHub)
 
@@ -59,7 +60,7 @@ exp_num = args.seed
 header = ['Iteration','Reward','Time to reason','N Rollouts', 'N Simulations']
 
 # path = "results"
-path = os.path.join(f"/users/rliu70/scratch/clean_results/lasertag/5k_particles", args.method)
+path = os.path.join(f"/users/rliu70/scratch/clean_results/lasertag/", args.method)
 
 if args.method == 'vomcp':
     log = LogFile(env_name + f"_n_laser={args.n_lasers}_n_vo={args.n_vo}_n_rollouts={args.n_rollouts}_", scenario_id, method, exp_num, path, header)

@@ -3,8 +3,9 @@ import random
 import numpy as np
 from scipy.stats import t as t_distr
 
-def eaf_modified_planning(env, agent, max_it=5000, k=5000, max_depth=20, t_test_pval=1E-2, **kwargs):
+def eafm_planning(env, agent, max_it=5000, k=5000, max_depth=20, **kwargs):
     '''planning function for eaf_modified'''
+    t_test_pval = kwargs['pval']
 
     # 1. Setting the environment for simulation
     copy_env = env.copy()
@@ -67,6 +68,11 @@ def get_t_stat(main_results, obs_branch_stats, obs_reward, gamma):
 
     Q_main, Q_sqr_main, N_main = main_results
 
+    # with just one datapoint, estimate of real action value unreliable, so default to conservative option of getting more data
+    if N_main <= 1:
+        print("Real action value unreliable, defaulting to observe")
+        return 100000, 1
+
     std_err1 = (Q_sqr_main - Q_main**2) / (N_main-1)
     dof_denom1 = std_err1**2 / (N_main-1)
 
@@ -79,7 +85,8 @@ def get_t_stat(main_results, obs_branch_stats, obs_reward, gamma):
     for obs_stat in obs_branch_stats:
         Q_, Q_sqr_, N_ = obs_stat
 
-        if N_ < 2:  # only consider histories with at least two rollouts to get non-singular measure of standard errors
+        if N_ <= 1:  # only consider histories with at least two rollouts to get non-singular measure of standard errors
+            print(f"Warning: observation branch visited only {N_} times. Skipping observation.")
             continue
 
         # multiply by discount factors for taking extra action
@@ -96,7 +103,8 @@ def get_t_stat(main_results, obs_branch_stats, obs_reward, gamma):
 
     # if "observe" branch under-explored, we'll force agent to take real action
     if N_obs == 0:
-        return -1000, 1
+        print("Observe value unreliable, defaulting to real action")
+        return -100000, 1
 
     # normalise by total number of rollouts used in the averages
     Q_obs /= N_obs
