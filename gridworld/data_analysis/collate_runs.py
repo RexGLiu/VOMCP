@@ -58,6 +58,8 @@ def collate_files(filepath, out_folder):
     output_name = re.sub(pattern, f'_{nruns}_runs', output_name)
     print(output_name)
 
+    assert np.min(pathlen_array) > 0
+
     # save collated results to file
     assert "raw_data" not in out_folder, f"Cannot save to path {out_folder} which includes raw_data"
     output_path = os.path.join(out_folder, output_name)
@@ -69,11 +71,12 @@ def collate_files(filepath, out_folder):
         np.save(f, tot_rew_array)
         np.save(f, R_array)
         np.save(f, tot_obs_array)
+    print(np.mean(R_array))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path', type=str, default="../results/raw_data", required=False, help="Root folder of results to process")
+    parser.add_argument('--path', type=str, default="../results/raw_data/gamma=0.9/POMCP/30000", required=False, help="Root folder of results to process")
     args = parser.parse_args()
 
     # walk through folder and subfolders to process files
@@ -93,6 +96,7 @@ if __name__ == "__main__":
         path_list = root.split(os.path.sep)
         path_list = path_list[0:2] + path_list[3:-1]
         out_folder = os.path.sep.join(path_list)
+        print(out_folder)
 
         if out_folder not in visited_folders:
             visited_folders.append(out_folder)

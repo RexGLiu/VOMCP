@@ -13,18 +13,14 @@ import os
 import glob
 import matplotlib.pyplot as plt
 
-model = "EA"
+model = "EAF_modified"
 model_path = os.path.join("../results/explore_c", model)
 
-x_axis = range(5000,30000,5000)
-cfactors = [ int(10**c_pow) for c_pow in range(1,5) ]
-
-
-model = "VOMCP"
 n_vobs = 1
-model_path = f"../results/explore_c/VOMCP/n_vobs={n_vobs}"
+if model == "VOMCP":
+    model_path = os.path.join(model_path, f"n_vobs={n_vobs}")
 
-x_axis = range(5000,30000,5000)
+x_axis = range(5000,35000,5000)
 cfactors = [ int(10**c_pow) for c_pow in range(1,5) ]
 
 
@@ -36,6 +32,8 @@ for ii, c in enumerate(cfactors):
     file_folder = os.path.join(model_path, f"c={c}")
     file_list = glob.glob(file_folder + "/*.npy")
     file_list.sort(key=get_nsamples)
+    if len(file_list) > len(x_axis):
+        file_list = file_list[:-1]
 
     n_datapts = len(file_list)
     return_rate = [None] * n_datapts
@@ -57,22 +55,22 @@ for ii, c in enumerate(cfactors):
         return_err[jj] = np.sqrt(np.var(R_array) / nruns)
 
     print(return_rate)
-    plt.figure(1, figsize=(4.75, 4))
-    plt.errorbar(x_axis, return_rate, yerr=return_err, label="c={}".format(cfactors[ii]), linewidth=1, alpha=0.9)
-
-
-plt.figure(1)
-plt.xlabel("total number of Monte-Carlo samples")
-plt.ylabel("average return")
-plt.xlim([x_axis[0] - 500, x_axis[-1] + 500])
-plt.xticks(x_axis)
-plt.title(model)
-
-# plt.legend(loc="upper left", prop={"size": 10})
-if model=="POMCP":
-    plt.legend(loc="upper right", prop={"size": 10})
-    plt.ylim([40,160])
-plt.tight_layout()
+#     plt.figure(1, figsize=(4.75, 4))
+#     plt.errorbar(x_axis, return_rate, yerr=return_err, label="c={}".format(cfactors[ii]), linewidth=1, alpha=0.9)
+#
+#
+# plt.figure(1)
+# plt.xlabel("total number of Monte-Carlo samples")
+# plt.ylabel("average return")
+# plt.xlim([x_axis[0] - 500, x_axis[-1] + 500])
+# plt.xticks(x_axis)
+# plt.title(model)
+#
+# plt.legend(loc="lower left", prop={"size": 10})
+# if model=="POMCP":
+#     plt.legend(loc="upper right", prop={"size": 10})
+#     plt.ylim([40,160])
+# plt.tight_layout()
 
 # save_folder = "rerun/graphs"
 # file_name = f"{model} - perf_vs_cfactor"
