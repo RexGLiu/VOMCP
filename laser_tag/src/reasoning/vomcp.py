@@ -187,8 +187,9 @@ def get_t_stat(main_results, virtual_results, observations, obs_count, obs_rewar
     return t_stat, dof
 
 
-def vomcp_planning(env, agent, max_it=5000, max_k=5000, max_depth=20, t_test_pval=1E-2, **kwargs):
+def vomcp_planning(env, agent, max_it=5000, max_k=5000, max_depth=20, **kwargs):
     n_obs = kwargs['n_vo']
+    t_test_pval = kwargs['pval']
 
     # 1. Setting the environment for simulation
     copy_env = env.copy()
