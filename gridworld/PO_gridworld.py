@@ -18,6 +18,14 @@ MAPS = {
         "FFHFFG",
         "FFFHHF"
     ],
+    "6x6_hard2": [
+        "SFFFHF",
+        "FHHFFF",
+        "FHFHFH",
+        "FFHHFF",
+        "HFFFHF",
+        "FFHFFG"
+    ],
     "6x6_easy": [
         "SFFFFF",
         "FFFFFF",

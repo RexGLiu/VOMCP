@@ -15,7 +15,7 @@ from planners.base_planner import BeliefException
 parser = argparse.ArgumentParser()
 parser.add_argument("--save_name", required=False, default="", type=str, help='Save filename')
 parser.add_argument("--save_folder", required=False, default=".", type=str, help='Location to save results')
-parser.add_argument("--env", required=False, default="6x6", type=str, choices=["6x6", "6x6_easy", "6x6_hard", "shortcut"], help='Environment to run')
+parser.add_argument("--env", required=False, default="6x6", type=str, choices=["6x6", "6x6_easy", "6x6_hard", "6x6_hard2", "shortcut"], help='Environment to run')
 parser.add_argument("--mode", required=False, default="VOMCP", type=str, choices=["VOMCP", "POMCP", "EA", "EAF", "EAF_modified", "VOMCP_avg", "VOMCP_unequal"], help='Algorithm to run')
 parser.add_argument("--nruns", required=False, default=10, type=int, help='Number of trials to run')
 parser.add_argument("--seed", required=False, default=0, type=int, help='Random seed')
