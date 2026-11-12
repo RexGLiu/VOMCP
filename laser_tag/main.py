@@ -59,8 +59,7 @@ state = env.reset()
 exp_num = args.seed
 header = ['Iteration','Reward','Time to reason','N Rollouts', 'N Simulations']
 
-# path = "results"
-path = os.path.join(f"/users/rliu70/scratch/clean_results/lasertag/", args.method)
+path = "results"
 
 if args.method == 'vomcp':
     log = LogFile(env_name + f"_n_laser={args.n_lasers}_n_vo={args.n_vo}_n_rollouts={args.n_rollouts}_", scenario_id, method, exp_num, path, header)
