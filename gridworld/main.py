@@ -152,7 +152,7 @@ for i in range(nruns):
         print("Distribution: ", distr)
         print("Beliefs: ", beliefs)
 
-        with open(save_path + "_err.npy".format, "wb") as f:
+        with open(save_path + "_err.npy", "wb") as f:
             np.save(f, beliefs)
             np.save(f, np.sum(beliefs))
             np.save(f, distr)
