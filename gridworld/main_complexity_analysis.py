@@ -16,6 +16,7 @@ parser.add_argument("--history_file", required=False, default="", type=str, help
 parser.add_argument("--trial_idx", required=False, default=None, type=int, help='Which trial in history file to use. Default is to loop through all.')
 parser.add_argument("--env", required=False, default="6x6", type=str, choices=["6x6", "6x6_easy", "6x6_hard", "shortcut"], help='Environment to run')
 parser.add_argument("--mode", required=False, default="VOMCP", type=str, choices=["VOMCP", "POMCP", "EA", "EAF", "EAF_modified", "VOMCP_avg", "VOMCP_unequal"], help='Algorithm to run')
+parser.add_argument("--nruns", required=False, default=10, type=int, help='Number of trials to run')
 parser.add_argument("--seed", required=False, default=0, type=int, help='Random seed')
 parser.add_argument("--gamma", required=False, default=0.95, type=float, help='Discount factor')
 parser.add_argument("--p_obs", required=False, default=0.75, type=float, help="Probability of observing true state")
@@ -37,7 +38,8 @@ if args.n_rollouts == 0:
     args.n_rollouts = args.n_samples
 
 '''Save run parameters for each seed to a run_parameter subfolder'''
-run_params = {"env": args.env,
+run_params = {"nruns": args.nruns,
+    "env": args.env,
     "survival_reward": args.survival_rew,
     "mode": args.mode,
     "n_vobs": args.n_vobs,
