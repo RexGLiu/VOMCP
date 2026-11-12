@@ -126,7 +126,7 @@ visit_count = np.zeros(env.map.size, dtype=np.uint64)    # number of visits to e
 nruns = run_params['nruns']
 success_array = np.zeros(nruns, dtype=int)
 pathlen_array = np.zeros(nruns, dtype=np.uint64)
-tot_rew_array = np.zeros(nruns, dtype=np.float_)
+tot_rew_array = np.zeros(nruns, dtype=np.float64)
 R_array = np.zeros(nruns, dtype=np.float_)
 obs_count_array =  np.zeros(nruns, dtype=np.uint64)
 history_list = [None]*nruns
